@@ -1,0 +1,29 @@
+[build-system] 
+requires = ["setuptools&gt;=68"] 
+build-backend = "setuptools.build\_meta" 
+
+[project] 
+name = "arabic-sentiment" 
+version = "0.1.0" 
+description = "Service MLOps d'Analyse de Sentiment en Arabe avec AraBERT" 
+requires-python = "&gt;=3.10" 
+dependencies = [ 
+"transformers&gt;=4.35.0",
+ "torch&gt;=2.1.0", 
+ "fastapi&gt;=0.104.0",
+  "uvicorn&gt;=0.24.0", 
+  "pydantic&gt;=2.5.0", 
+  "pydantic-settings&gt;=2.1.0", 
+  "onnxruntime&gt;=1.16.0", 
+  "skl2onnx&gt;=1.15.0",
+   "mlflow&gt;=2.8.0", 
+   "python-json-logger&gt;=2.0.7" 
+   ] 
+   [project.optional-dependencies]
+    dev = [ 
+        "pytest&gt;=7.4.0",
+         "pytest-cov&gt;=4.1.0",
+          "httpx&gt;=0.25.0", 
+          "ruff&gt;=0.1.5",
+           "black&gt;=23.11.0" 
+           ]

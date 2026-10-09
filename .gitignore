@@ -1,0 +1,26 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+# Model/data artifacts
+models/*.joblib
+data/
+.env
+.env.*
+# IDE
+.vscode/
+.idea/
+# OS
+.DS_Store
+Thumbs.dbvenv/ 
+.venv/ 
+__pycache__/ 
+*.joblib 
+*.pt 
+.pytest_cache/ 
