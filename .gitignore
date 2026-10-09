@@ -10,7 +10,9 @@ htmlcov/
 *.egg-info/
 # Model/data artifacts
 models/*.joblib
-data/
+models/*.onnx
+models/*.pt
+data/raw/arabic_sentiment_330k.csv
 .env
 .env.*
 # IDE
@@ -18,9 +20,4 @@ data/
 .idea/
 # OS
 .DS_Store
-Thumbs.dbvenv/ 
-.venv/ 
-__pycache__/ 
-*.joblib 
-*.pt 
-.pytest_cache/ 
+Thumbs.db
