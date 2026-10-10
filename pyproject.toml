@@ -38,10 +38,13 @@ ml = [
     "tf2onnx>=1.16.0"
 ]
 data = ["kagglehub>=0.3.0"]
+serving = ["bentoml>=1.4,<2", "pyarrow>=18.0.0"]
+loadtest = ["locust>=2.32.0"]
 
 [project.scripts]
 arabic-sentiment-train = "arabic_sentiment.train:main"
 arabic-sentiment-serve = "arabic_sentiment.api.main:run"
+arabic-sentiment-batch = "arabic_sentiment.batch:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
