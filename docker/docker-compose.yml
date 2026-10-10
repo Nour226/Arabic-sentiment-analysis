@@ -54,13 +54,33 @@ services:
       - mlflow-data:/mlflow
 
   api:
-    profiles: ["api"]
+    profiles: ["api", "canary"]
     build:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
       - "8000:8000"
     restart: unless-stopped
+
+  api_canary:
+    profiles: ["canary"]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    profiles: ["canary"]
+    depends_on:
+      - api
+      - api_canary
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
 
 volumes:
   minio-data:

@@ -6,7 +6,8 @@ An end-to-end learning project for Arabic sentiment classification with AraBERT,
 
 - Module 1 (`v0.1.0`): installable Python package and FastAPI baseline.
 - Module 2 (`v0.2.0`): experiment tracking, MinIO artifact storage, DVC dataset lineage, and CI quality gates.
-- Modules 3–5: serving/load testing, optimization, and monitoring are documented as they are completed.
+- Module 3 (`v0.3.0`): BentoML adaptive batching, Parquet batch scoring, Locust benchmarking, and 5% canary routing.
+- Modules 4–5: optimization and monitoring are documented as they are completed.
 
 ## Requirements
 
@@ -73,6 +74,28 @@ pytest -v --cov=src/arabic_sentiment --cov-fail-under=80
 ```
 
 GitHub Actions runs lint, tests with the 80% coverage gate, DVC graph validation, Compose validation, and an API Docker build.
+
+## Production Serving and Batch Scoring
+
+Start the BentoML adaptive-batching service:
+
+```cmd
+venv\Scripts\bentoml.exe serve serving.service:ArabicSentimentService --host 127.0.0.1 --port 3000
+```
+
+Its `/predict` endpoint accepts an object containing a `texts` list. For offline Parquet scoring:
+
+```cmd
+python -m arabic_sentiment.batch --data data/raw/reviews_sample.csv --max-rows 1000 --output artifacts/batch/predictions.parquet
+```
+
+The optional 5% canary stack is available with `docker compose -f docker/docker-compose.yml --profile canary up -d nginx api_canary api`; Nginx listens on port 8080. Run the load test against the stable API with:
+
+```cmd
+locust -f loadtest/locustfile.py --headless -u 10 -r 2 --run-time 30s --host http://localhost:8000
+```
+
+The recorded local fallback benchmark was 428 requests, zero failures, 51.97 ms mean latency, and 14.91 requests/sec. These measurements use the development fallback, not a trained production model, and are not model-quality or production-capacity claims.
 
 ## Repository Layout
 
