@@ -30,7 +30,15 @@ def test_predict_success(client):
     data = response.json()
     assert data["label"] in ["positive", "neutral", "negative"]
     assert 0.0 <= data["confidence"] <= 1.0
+    assert data["model_version"]
     assert response.headers["X-Request-ID"]
+
+
+def test_metadata_and_batch_endpoints(client):
+    assert client.get("/metadata").status_code == 200
+    response = client.post("/predict/batch", json={"texts": ["first", "second"]})
+    assert response.status_code == 200
+    assert len(response.json()) == 2
 
 def test_predict_validation_rejection(client):
     # Rejects empty text with 422
