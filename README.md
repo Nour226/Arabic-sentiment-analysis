@@ -2,17 +2,27 @@
 
 An end-to-end learning project for Arabic sentiment classification with AraBERT, FastAPI, ONNX Runtime, MLflow, DVC, and automated quality checks.
 
+## Three-command quick start
+
+```bash
+git clone https://github.com/Nour226/Arabic-sentiment-analysis.git && cd Arabic-sentiment-analysis
+python -m pip install -e ".[dev,serving,loadtest,optimization]"
+pytest -v --cov=src/arabic_sentiment --cov-fail-under=80
+```
+
+These three commands install the project and run the deterministic validation suite on a fresh checkout. Python 3.10+ is supported. Docker Desktop with Compose v2 is additionally required for MLflow, MinIO, and the optional API stack.
+
 ## Current Status
 
 - Module 1 (`v0.1.0`): installable Python package and FastAPI baseline.
 - Module 2 (`v0.2.0`): experiment tracking, MinIO artifact storage, DVC dataset lineage, and CI quality gates.
 - Module 3 (`v0.3.0`): BentoML adaptive batching, Parquet batch scoring, Locust benchmarking, and 5% canary routing.
 - Module 4 (`v0.4.0`): ONNX INT8 quantization and benchmarking tools.
-- Module 5: observability and drift detection remain upcoming.
+- Module 5 (`v0.5.0`): Prometheus-style metrics, PSI/KS drift detection, and operational runbook.
 
 ## Requirements
 
-- Python 3.11.
+- Python 3.10+ (CI validates Python 3.11).
 - Docker Desktop with Docker Compose v2 for MLflow and MinIO.
 - Git.
 - Internet access for the initial Kaggle and Hugging Face downloads.
@@ -20,7 +30,7 @@ An end-to-end learning project for Arabic sentiment classification with AraBERT,
 On Windows, activate the project venv with `venv\\Scripts\\activate`. Install the project and extras:
 
 ```cmd
-python -m pip install -e ".[dev,ml,data]"
+python -m pip install -e ".[dev,ml,data,serving,loadtest,optimization]"
 ```
 
 ## Dataset and DVC
@@ -119,6 +129,16 @@ The benchmark reports model size, mean/p50/p95 per-row latency, and accuracy whe
 - `reports/`: module implementation and validation notes.
 - `tests/`: fast deterministic unit tests; tests do not download pretrained models.
 
+## Monitoring and operations
+
+Run the local drift check with:
+
+```cmd
+python -m monitoring --reference data/raw/reviews_sample.csv --current data/raw/reviews_sample.csv
+```
+
+Operational thresholds and rollback actions are documented in `docs/runbook.md`.
+
 ## Releases
 
-Releases are tagged after the corresponding module branch is reviewed and merged to `main`: `v0.1.0` through `v0.5.0`.
+Releases are tagged after the corresponding module branch is reviewed and merged to `main`: `v0.1.0` through `v0.5.0`. Reports for every module are stored in `reports/`.
