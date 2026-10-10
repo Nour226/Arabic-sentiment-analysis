@@ -1,8 +1,10 @@
+import time
 import uuid
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi.responses import PlainTextResponse
 
 from arabic_sentiment.api.schemas import (
     BatchSentimentRequest,
@@ -14,8 +16,10 @@ from arabic_sentiment.api.schemas import (
 from arabic_sentiment.config import settings
 from arabic_sentiment.logging_conf import logger
 from arabic_sentiment.model import SentimentPredictor
+from monitoring.prometheus_exporter import PrometheusMetricsExporter
 
 predictor = None
+metrics = PrometheusMetricsExporter()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,9 +35,15 @@ app = FastAPI(
 
 @app.middleware("http")
 async def add_correlation_id(request: Request, call_next):
+    started = time.perf_counter()
     correlation_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
     request.state.correlation_id = correlation_id
     response: Response = await call_next(request)
+    metrics.record_http_request(
+        request.url.path,
+        (time.perf_counter() - started) * 1000,
+    )
+    metrics.increment_counter(f"http_{response.status_code}")
     response.headers["X-Request-ID"] = correlation_id
     return response
 
@@ -43,6 +53,12 @@ def health():
         status="healthy" if predictor is not None else "degraded",
         model_loaded=predictor is not None,
     )
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+def prometheus_metrics() -> PlainTextResponse:
+    """Expose request and drift metrics in Prometheus text format."""
+    return PlainTextResponse(metrics.render(), media_type="text/plain; version=0.0.4")
 
 @app.post("/predict", response_model=SentimentResponse)
 def predict(payload: SentimentRequest, request: Request):

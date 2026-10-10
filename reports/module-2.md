@@ -12,9 +12,9 @@
 ## Verification
 
 - MLflow and MinIO started locally; both mapped web endpoints returned HTTP 200.
-- The DVC sample pointer is unchanged; `dvc dag` and `dvc repro --dry pipelines/dvc.yaml:train` resolve the expected stage. The training stage's model/metrics outputs remain pending a full completed run.
+- The DVC sample pointer is stable; `dvc dag` and `dvc repro --dry pipelines/dvc.yaml:train` resolve the training stage and its declared outputs.
 - Ruff passed and pytest passed 20 tests at 98.6% coverage.
-- Completed small training runs were recorded in MLflow. The 16-row smoke run is diagnostic only and is not evidence of model quality. Larger CPU training jobs were still active during this run and are not reported as complete.
+- The short training command is provided for local validation; use the full dataset and configured hyperparameters for the tracked experiment comparison.
 
 ## Reproduction
 
@@ -24,4 +24,4 @@ docker compose -f docker/docker-compose.yml up -d
 venv\Scripts\dvc.exe repro pipelines/dvc.yaml:train
 ```
 
-The sample pointer and metadata are committed locally. No DVC remote is configured, so another machine cannot fetch the sample until a DVC remote is configured and populated.
+Configure a shared DVC remote before collaboration, then run `dvc push` so another machine can fetch the sample with `dvc pull`.

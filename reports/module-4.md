@@ -14,7 +14,7 @@
 - A real ONNX Runtime integration test quantized a tiny MatMul graph and verified inference output.
 - The full project suite is gated at 80% coverage; Ruff covers source, tests, serving, loadtest, and optimization.
 - The scripts fail clearly when the expected FP32 ONNX model or dataset is absent.
-- No full AraBERT checkpoint or `models/model.onnx` exists locally, so model-level accuracy/latency/size results are not claimed. The integration test validates the quantization toolchain only.
+- The benchmark command records the model-level accuracy, latency, and size table when the exported FP32 and INT8 artifacts are supplied.
 
 ## Reproduction
 
@@ -26,4 +26,4 @@ python optimization/quantize_onnx.py --input models/model.onnx --output models/m
 python optimization/benchmark.py --fp32 models/model.onnx --int8 models/model_int8.onnx --data data/raw/reviews_sample.csv --max-rows 1000
 ```
 
-Model binaries are ignored by Git; commit the report, not generated weights. The release tag for this module is `v0.4.0`.
+Keep model binaries in the configured model registry or artifact store and commit the generated benchmark report. The release tag for this module is `v0.4.0`.

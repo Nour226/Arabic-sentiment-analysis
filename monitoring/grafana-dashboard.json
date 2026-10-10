@@ -1,0 +1,16 @@
+{
+  "title": "Arabic Sentiment MLOps",
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "title": "Request latency (ms)",
+      "type": "timeseries",
+      "targets": [{"expr": "arabic_sentiment_http_request_ms"}]
+    },
+    {
+      "title": "PSI drift score",
+      "type": "timeseries",
+      "targets": [{"expr": "arabic_sentiment_drift_score"}]
+    }
+  ]
+}

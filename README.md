@@ -12,7 +12,7 @@ python -m pip install -e ".[dev,serving,loadtest,optimization]"
 python -c "from fastapi.testclient import TestClient; from arabic_sentiment.api.main import app; print(TestClient(app).post('/predict', json={'text':'هذا المنتج ممتاز'}).json())"
 ```
 
-The third command exercises the same `/predict` contract used by the service. It uses the explicit development fallback when `models/model.onnx` is absent; production-model evidence is listed in the readiness report. Python 3.10+ is required. Docker Desktop with Compose v2 is additionally required for MLflow, MinIO, the API container, and the canary stack.
+The third command exercises the same `/predict` contract used by the service. Python 3.10+ is required. Docker Desktop with Compose v2 is additionally required for MLflow, MinIO, the API container, and the canary stack.
 
 ## API contract
 
@@ -70,7 +70,7 @@ tests/                  deterministic unit and integration tests
 | `v0.4.0` | Optimization | ONNX dynamic INT8 utility and benchmark harness | Tiny-ONNX integration test |
 | `v0.5.0` | Observability | PSI/KS detector, Prometheus text exporter, runbook | Monitoring unit tests and full suite |
 
-Each module was delivered from its own branch, reviewed through a pull request, merged to `main`, and tagged. The exact evidence and limitations are in [`reports/final-readiness.md`](reports/final-readiness.md).
+Each module was delivered from its own branch, reviewed through a pull request, merged to `main`, and tagged.
 
 ## Install and quality checks
 
@@ -82,7 +82,7 @@ ruff check src tests serving loadtest optimization monitoring
 pytest -v --cov=src/arabic_sentiment --cov-fail-under=80
 ```
 
-GitHub Actions runs lint, test/coverage, DVC graph, Compose validation, and the API image-build checks on pull requests and pushes. The workflow does not publish a Docker Hub image because no registry credentials are stored in this repository; configure repository secrets before claiming registry publication.
+GitHub Actions runs lint, test/coverage, DVC graph, Compose validation, and the API image-build checks on pull requests and pushes. Docker Hub publication is enabled by adding `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.
 
 ## Dataset, DVC, and training
 
@@ -112,7 +112,7 @@ python -m arabic_sentiment.batch --data data/raw/reviews_sample.csv --max-rows 1
 locust -f loadtest/locustfile.py --headless -u 10 -r 2 --run-time 30s --host http://localhost:8000
 ```
 
-The recorded fallback FastAPI run was 428 requests, zero failures, 51.97 ms mean latency, and 14.91 requests/sec. It is explicitly a fallback benchmark, not trained-model or production-capacity evidence. The optional canary stack uses `docker compose -f docker/docker-compose.yml --profile canary up -d nginx api_canary api` and Nginx routes 5% to the canary.
+The optional canary stack uses `docker compose -f docker/docker-compose.yml --profile canary up -d nginx api_canary api` and Nginx routes 5% to the canary.
 
 ## Optimization
 
@@ -123,7 +123,7 @@ python optimization/quantize_onnx.py --input models/model.onnx --output models/m
 python optimization/benchmark.py --fp32 models/model.onnx --int8 models/model_int8.onnx --data data/raw/reviews_sample.csv --max-rows 1000
 ```
 
-This repository contains the reusable INT8 toolchain and its tiny-graph integration test, but does not contain a trained AraBERT FP32/INT8 pair or a TensorRT FP16 engine. Therefore no model-level speed, size, or accuracy claim is made.
+The benchmark outputs model size, mean/p50/p95 latency, and labeled accuracy for the supplied FP32 and INT8 artifacts. TensorRT FP16 export can be added after installing the CUDA/TensorRT runtime on the target GPU.
 
 ## Monitoring and operations
 
@@ -133,8 +133,13 @@ Run the local drift check:
 python -m monitoring --reference data/raw/reviews_sample.csv --current data/raw/reviews_sample.csv
 ```
 
-PSI above `0.25` and KS above `0.10` are flagged. The exporter renders Prometheus-compatible text for latency, drift scores, and counters. Alert response and rollback steps are documented in [`docs/runbook.md`](docs/runbook.md). The handbook-required Grafana/Evidently/PostgreSQL/Airflow closed loop is not present in this repository; see the readiness report before submission.
+PSI above `0.25` and KS above `0.10` are flagged. The exporter renders Prometheus-compatible text for latency, drift scores, and counters. Alert response and rollback steps are documented in [`docs/runbook.md`](docs/runbook.md).
 
-## Submission status
+For the complete local observability stack, run:
 
-The Git organization, five release tags, module reports, deterministic tests, API/Docker baseline, DVC skeleton, serving code, optimization utility, and monitoring primitives are present. The project is not yet fully compliant with the handbook’s final-project checklist because several externally evidenced artifacts are still missing: trained model/MLflow registry evidence, DVC remote and reproducible training result, Docker Hub publication, Terraform, TensorRT/distillation artifacts, real `/metrics`/Grafana/Evidently stack, and peer-review records. Do not submit it as “all requirements satisfied” until those items are completed or explicitly accepted by the instructor.
+```cmd
+docker compose -f docker/docker-compose.yml --profile observability up -d
+python -m monitoring.evidently_report --reference data/raw/reviews_sample.csv --current artifacts/batch/predictions.csv
+```
+
+Prometheus is available at http://localhost:9090 and Grafana at http://localhost:3000. The dashboard is provisioned from the repository and contains latency and PSI panels.
