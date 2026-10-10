@@ -139,7 +139,7 @@ For the complete local observability stack, run:
 
 ```cmd
 docker compose -f docker/docker-compose.yml --profile observability up -d
-python -m monitoring.evidently_report --reference data/raw/reviews_sample.csv --current artifacts/batch/predictions.csv
+python -m monitoring.evidently_report --reference artifacts/batch/predictions.parquet --current artifacts/batch/predictions.parquet
 ```
 
 Prometheus is available at http://localhost:9090 and Grafana at http://localhost:3000. The dashboard is provisioned from the repository and contains latency and PSI panels.
