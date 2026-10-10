@@ -41,12 +41,15 @@ data = ["kagglehub>=0.3.0"]
 serving = ["bentoml>=1.4,<2", "pyarrow>=18.0.0"]
 loadtest = ["locust>=2.32.0"]
 optimization = ["onnx>=1.16.0"]
+monitoring = ["prometheus-client>=0.20.0"]
 
 [project.scripts]
 arabic-sentiment-train = "arabic_sentiment.train:main"
 arabic-sentiment-serve = "arabic_sentiment.api.main:run"
 arabic-sentiment-batch = "arabic_sentiment.batch:main"
+arabic-sentiment-monitoring = "monitoring.__main__:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "--cov=src/arabic_sentiment --cov-report=term-missing"
