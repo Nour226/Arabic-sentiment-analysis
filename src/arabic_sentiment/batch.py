@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from arabic_sentiment.model import SentimentPredictor
+from monitoring.batch_report import write_batch_drift_report
 
 
 def score_batch(
@@ -49,8 +50,17 @@ def main() -> None:
     )
     parser.add_argument("--max-rows", type=int, default=1000)
     parser.add_argument("--model", type=Path)
+    parser.add_argument("--reference", type=Path, help="Reference CSV for the post-scoring drift snapshot")
+    parser.add_argument(
+        "--drift-report",
+        type=Path,
+        default=Path("reports/drift_latest.json"),
+    )
     args = parser.parse_args()
     result = score_batch(args.data, args.output, args.max_rows, args.model)
+    if args.reference:
+        reference = pd.read_csv(args.reference)
+        write_batch_drift_report(reference, result, args.drift_report)
     print(f"Scored {len(result)} rows to {args.output}")
 
 

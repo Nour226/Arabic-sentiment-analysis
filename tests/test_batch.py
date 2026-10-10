@@ -59,3 +59,14 @@ def test_score_batch_rejects_empty_data_and_invalid_limit(tmp_path):
         batch.score_batch(input_path, tmp_path / "out.parquet")
     with pytest.raises(ValueError, match="max_rows must be positive"):
         batch.score_batch(input_path, tmp_path / "out.parquet", max_rows=0)
+
+
+def test_batch_drift_report_is_written(tmp_path):
+    input_path = tmp_path / "reviews.csv"
+    input_path.write_text("text,label\nshort,positive\nlonger,negative\n", encoding="utf-8")
+    report_path = tmp_path / "drift.json"
+    result = batch.score_batch(input_path, tmp_path / "out.parquet")
+    batch.write_batch_drift_report(
+        result.assign(confidence=0.8), result, report_path
+    )
+    assert report_path.exists()

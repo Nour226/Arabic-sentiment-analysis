@@ -1,0 +1,11 @@
+groups:
+  - name: arabic-sentiment
+    rules:
+      - alert: ArabicSentimentDrift
+        expr: arabic_sentiment_drift_score{metric="psi"} > 0.25
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Arabic sentiment input drift detected"
+          description: "PSI exceeded 0.25; inspect the latest Evidently report before promotion."

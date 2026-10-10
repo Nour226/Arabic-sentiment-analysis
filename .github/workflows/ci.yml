@@ -27,11 +27,15 @@ jobs:
 
       - name: Lint with Ruff
         run: |
-          ruff check src tests serving loadtest optimization monitoring
+          ruff check src tests serving loadtest optimization monitoring scripts
 
       - name: Run Pytest with Coverage Gate
         run: |
           pytest -v --cov=src/arabic_sentiment --cov-fail-under=80
+
+      - name: Run model quality gate when metrics are available
+        if: ${{ hashFiles('reports/training-metrics.json') != '' }}
+        run: python scripts/check_quality.py --metrics reports/training-metrics.json --baseline 0.70
 
       - name: Validate DVC pipeline
         run: dvc dag
@@ -48,3 +52,24 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -f docker/Dockerfile -t arabic-sentiment:test .
+
+  docker-publish:
+    needs: docker-build
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DOCKERHUB_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/arabic-sentiment:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/arabic-sentiment:${{ github.sha }}

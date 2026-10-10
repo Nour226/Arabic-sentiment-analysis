@@ -40,6 +40,12 @@ def test_metadata_and_batch_endpoints(client):
     assert response.status_code == 200
     assert len(response.json()) == 2
 
+
+def test_metrics_endpoint(client):
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "arabic_sentiment_events" in response.text
+
 def test_predict_validation_rejection(client):
     # Rejects empty text with 422
     payload = {"text": ""}

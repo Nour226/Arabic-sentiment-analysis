@@ -41,7 +41,7 @@ data = ["kagglehub>=0.3.0"]
 serving = ["bentoml>=1.4,<2", "pyarrow>=18.0.0"]
 loadtest = ["locust>=2.32.0"]
 optimization = ["onnx>=1.16.0"]
-monitoring = ["prometheus-client>=0.20.0"]
+monitoring = ["prometheus-client>=0.20.0", "evidently>=0.7.0"]
 
 [project.scripts]
 arabic-sentiment-train = "arabic_sentiment.train:main"

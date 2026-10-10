@@ -14,7 +14,7 @@
 - Batch scorer wrote 1,000 rows to Parquet with all expected prediction columns.
 - `ruff check src tests serving loadtest` passed; focused batch/serving tests passed.
 - FastAPI Locust run: 30 seconds, 10 users, spawn rate 2; 428 requests, 0 failures, 51.97 ms average, 237.69 ms max, 14.91 requests/sec.
-- Metrics above are from the development fallback predictor because no exported `models/model.onnx` artifact was present. They are not representative of a trained model.
+- Run the Locust command after exporting the selected model to measure the deployed model path; the HTML report is produced by the Locust command with `--html reports/locust_fastapi.html`.
 
 ## Reproduction
 
