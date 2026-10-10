@@ -1,0 +1,5 @@
+train:
+  data: data/raw/reviews_sample.csv
+  epochs: 3
+  model: aubmindlab/bert-base-arabertv02-twitter
+  output: models/arabic-sentiment

@@ -1,0 +1,23 @@
+stages:
+  train:
+    cmd: >-
+      python -m arabic_sentiment.train
+      --data ${train.data}
+      --output ${train.output}
+      --model ${train.model}
+      --epochs ${train.epochs}
+      --metrics-file reports/training-metrics.json
+    deps:
+      - ../data/raw/reviews_sample.csv
+      - ../src/arabic_sentiment/config.py
+      - ../src/arabic_sentiment/train.py
+    params:
+      - train.data
+      - train.epochs
+      - train.model
+      - train.output
+    outs:
+      - ../models/arabic-sentiment
+    metrics:
+      - ../reports/training-metrics.json:
+          cache: false

@@ -9,6 +9,8 @@ __pycache__/
 htmlcov/
 *.egg-info/
 # Model/data artifacts
+models/
+artifacts/
 models/*.joblib
 models/*.onnx
 models/*.pt

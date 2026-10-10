@@ -1,32 +1,85 @@
+import pytest
 from fastapi.testclient import TestClient
 
-from src.arabic_sentiment.api.main import app
-
-client = TestClient(app)
+from arabic_sentiment.api import main
 
 
-def test_health_endpoint() -> None:
+class FakePredictor:
+    def predict(self, text):
+        return "positive", 0.8, {
+            "negative": 0.1,
+            "neutral": 0.1,
+            "positive": 0.8,
+        }
+
+
+@pytest.fixture
+def client(monkeypatch):
+    monkeypatch.setattr(main, "predictor", FakePredictor())
+    return TestClient(main.app)
+
+def test_health_endpoint(client):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["status"] in {"ok", "degraded"}
+    assert response.json()["status"] == "healthy"
 
-
-def test_metadata_endpoint() -> None:
-    response = client.get("/metadata")
+def test_predict_success(client):
+    payload = {"text": "المنتج رائع جداً"}
+    response = client.post("/predict", json=payload)
     assert response.status_code == 200
-    assert response.json()["labels"] == ["negative", "neutral", "positive"]
+    data = response.json()
+    assert data["label"] in ["positive", "neutral", "negative"]
+    assert 0.0 <= data["confidence"] <= 1.0
+    assert response.headers["X-Request-ID"]
 
-
-def test_empty_text_is_rejected() -> None:
-    response = client.post("/predict", json={"text": ""})
+def test_predict_validation_rejection(client):
+    # Rejects empty text with 422
+    payload = {"text": ""}
+    response = client.post("/predict", json=payload)
     assert response.status_code == 422
 
 
-def test_prediction_contract() -> None:
-    response = client.post("/predict", json={"text": "هذا المنتج ممتاز ورائع"})
-    assert response.status_code in {200, 503}
-    if response.status_code == 200:
-        data = response.json()
-        assert data["label"] in {"negative", "neutral", "positive"}
-        assert 0 <= data["confidence"] <= 1
-        assert set(data["probabilities"]) == {"negative", "neutral", "positive"}
+def test_correlation_id_is_preserved(client):
+    response = client.get("/health", headers={"X-Request-ID": "request-123"})
+
+    assert response.headers["X-Request-ID"] == "request-123"
+
+
+def test_predict_returns_unavailable_without_model(client, monkeypatch):
+    monkeypatch.setattr(main, "predictor", None)
+
+    response = client.post("/predict", json={"text": "review"})
+
+    assert response.status_code == 503
+
+
+def test_predict_maps_inference_failure_to_500(client, monkeypatch):
+    class FailingPredictor:
+        def predict(self, text):
+            raise RuntimeError("inference failed")
+
+    monkeypatch.setattr(main, "predictor", FailingPredictor())
+
+    response = client.post("/predict", json={"text": "review"})
+
+    assert response.status_code == 500
+
+
+def test_lifespan_loads_predictor(monkeypatch):
+    monkeypatch.setattr(main, "predictor", None)
+    monkeypatch.setattr(main, "SentimentPredictor", FakePredictor)
+
+    with TestClient(main.app) as test_client:
+        response = test_client.get("/health")
+
+    assert response.json()["model_loaded"] is True
+
+
+def test_run_starts_uvicorn(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(main.uvicorn, "run", lambda *args, **kwargs: captured.update(kwargs))
+
+    main.run()
+
+    assert captured["port"] == 8000
+    assert captured["host"] == "0.0.0.0"
