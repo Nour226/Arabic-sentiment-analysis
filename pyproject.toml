@@ -40,6 +40,7 @@ ml = [
 data = ["kagglehub>=0.3.0"]
 serving = ["bentoml>=1.4,<2", "pyarrow>=18.0.0"]
 loadtest = ["locust>=2.32.0"]
+optimization = ["onnx>=1.16.0"]
 
 [project.scripts]
 arabic-sentiment-train = "arabic_sentiment.train:main"

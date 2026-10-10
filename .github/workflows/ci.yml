@@ -25,7 +25,7 @@ jobs:
 
       - name: Lint with Ruff
         run: |
-          ruff check src tests
+          ruff check src tests serving loadtest optimization
 
       - name: Run Pytest with Coverage Gate
         run: |

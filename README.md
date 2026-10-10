@@ -7,7 +7,8 @@ An end-to-end learning project for Arabic sentiment classification with AraBERT,
 - Module 1 (`v0.1.0`): installable Python package and FastAPI baseline.
 - Module 2 (`v0.2.0`): experiment tracking, MinIO artifact storage, DVC dataset lineage, and CI quality gates.
 - Module 3 (`v0.3.0`): BentoML adaptive batching, Parquet batch scoring, Locust benchmarking, and 5% canary routing.
-- Modules 4–5: optimization and monitoring are documented as they are completed.
+- Module 4 (`v0.4.0`): ONNX INT8 quantization and benchmarking tools.
+- Module 5: observability and drift detection remain upcoming.
 
 ## Requirements
 
@@ -96,6 +97,18 @@ locust -f loadtest/locustfile.py --headless -u 10 -r 2 --run-time 30s --host htt
 ```
 
 The recorded local fallback benchmark was 428 requests, zero failures, 51.97 ms mean latency, and 14.91 requests/sec. These measurements use the development fallback, not a trained production model, and are not model-quality or production-capacity claims.
+
+## ONNX Optimization
+
+Install the ONNX optimization extra, then export a trained checkpoint to `models/model.onnx`. Quantize it and compare both models against labeled reviews:
+
+```cmd
+python -m pip install -e ".[optimization]"
+python optimization/quantize_onnx.py --input models/model.onnx --output models/model_int8.onnx
+python optimization/benchmark.py --fp32 models/model.onnx --int8 models/model_int8.onnx --data data/raw/reviews_sample.csv --max-rows 1000
+```
+
+The benchmark reports model size, mean/p50/p95 per-row latency, and accuracy when labels are present. Model binaries remain ignored by Git. A real AraBERT comparison requires a completed training run and exported FP32 model.
 
 ## Repository Layout
 
