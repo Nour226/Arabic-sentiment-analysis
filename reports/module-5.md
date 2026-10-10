@@ -7,6 +7,8 @@
 - Drift summary and threshold gates suited for release monitoring.
 - A local CLI and runbook for alert response and rollback guidance.
 
+The implementation is deliberately a lightweight local monitoring primitive, not a claim that the full handbook observability stack is installed. It has no HTTP `/metrics` route, Grafana provisioning, Evidently TestSuite, PostgreSQL drift history, Airflow schedule, or automated retraining branch yet.
+
 ## Verification
 
 - Unit tests validate zero-drift stability, clear shift detection, and export payload rendering.
@@ -23,6 +25,6 @@ python -m monitoring --reference data/raw/reviews_sample.csv --current data/raw/
 
 - PSI > 0.25 is flagged as drifted.
 - KS > 0.10 is flagged as drifted.
-- Prometheus metrics are meant to be ingested by your deployment pipeline or a central dashboard.
+- Prometheus metrics are rendered as text by the exporter and are not yet exposed by an HTTP `/metrics` endpoint.
 
 The release tag for this module is `v0.5.0`.

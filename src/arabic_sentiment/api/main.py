@@ -5,7 +5,9 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response, status
 
 from arabic_sentiment.api.schemas import (
+    BatchSentimentRequest,
     HealthResponse,
+    MetadataResponse,
     SentimentRequest,
     SentimentResponse,
 )
@@ -69,11 +71,57 @@ def predict(payload: SentimentRequest, request: Request):
             label=label,
             confidence=confidence,
             probabilities=probs,
-            version=settings.VERSION,
+            model_version=settings.VERSION,
         )
     except (OSError, RuntimeError, ValueError) as exc:
         logger.error("prediction_failed", extra={"error": str(exc)})
         raise HTTPException(status_code=500, detail="Internal inference error")
+
+
+@app.get("/metadata", response_model=MetadataResponse)
+def metadata():
+    """Expose the model identity needed by deployment and audit tooling."""
+    backend = (
+        "onnxruntime"
+        if predictor is not None and getattr(predictor, "use_onnx", False)
+        else "development-fallback"
+    )
+    return MetadataResponse(
+        project=settings.PROJECT_NAME,
+        model_name=settings.MODEL_NAME,
+        model_version=settings.VERSION,
+        backend=backend,
+    )
+
+
+@app.post("/predict/batch", response_model=list[SentimentResponse])
+def predict_batch(payload: BatchSentimentRequest, request: Request):
+    """Score a small synchronous batch using the already-loaded predictor."""
+    if any(not text.strip() for text in payload.texts):
+        raise HTTPException(status_code=422, detail="Texts cannot be empty")
+    if predictor is None:
+        raise HTTPException(status_code=503, detail="Inference model is not ready")
+    results = []
+    for text in payload.texts:
+        try:
+            label, confidence, probs = predictor.predict(text)
+        except (OSError, RuntimeError, ValueError) as exc:
+            logger.error("batch_prediction_failed", extra={"error": str(exc)})
+            raise HTTPException(status_code=500, detail="Internal inference error") from exc
+        results.append(
+            SentimentResponse(
+                text=text,
+                label=label,
+                confidence=confidence,
+                probabilities=probs,
+                model_version=settings.VERSION,
+            )
+        )
+    logger.info(
+        "batch_prediction_served",
+        extra={"correlation_id": getattr(request.state, "correlation_id", "N/A"), "count": len(results)},
+    )
+    return results
 
 def run():
     uvicorn.run("arabic_sentiment.api.main:app", host="0.0.0.0", port=8000, reload=False)
